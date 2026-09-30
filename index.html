@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--green:#014C47;--copper:#BD5319;--on:#f2f7f5;--soft:rgba(242,247,245,.72);
+  --n1:#FFFFFF;--n2:#DCEFE8;--n3:#F7DCCB;--n4:#F4EBC6}
+*{box-sizing:border-box}
+body{margin:0;background-color:var(--green);color:var(--on);
+  background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);
+  background-size:28px 28px;font-family:"Manrope",system-ui,"Segoe UI",Arial,sans-serif;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:clamp(20px,4vw,48px) clamp(16px,4vw,40px) 64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.9rem;color:var(--soft)}
+header{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;margin:28px 0 32px}
+h1{font-family:"Unbounded","Manrope",sans-serif;font-weight:700;font-size:clamp(2rem,6vw,4.2rem);line-height:1.02;margin:0;max-width:14ch;color:#fff}
+.lede{margin:16px 0 22px;max-width:52ch;color:var(--soft);font-size:1.05rem}
+.cta{display:inline-block;background:var(--copper);color:#fff;text-decoration:none;font-weight:700;padding:14px 22px;border-radius:12px}
+.cta:hover{background:#9e4414}
+.cta:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.count{text-align:right}
+.count b{display:block;font-family:"Unbounded",sans-serif;font-size:clamp(2.6rem,7vw,4.5rem);line-height:1;color:#fff}
+.count span{color:var(--soft)}
+.wall{columns:4 250px;column-gap:22px;margin-top:20px}
+.note{break-inside:avoid;display:inline-block;width:100%;margin:0 0 22px;padding:22px 20px 16px;position:relative;
+  color:#1d2a28;border-radius:4px 4px 14px 4px;box-shadow:0 10px 22px -12px rgba(0,0,0,.55);transform:rotate(var(--r,0deg))}
+.note::before{content:"";position:absolute;top:-7px;left:50%;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:var(--copper);box-shadow:0 2px 3px rgba(0,0,0,.35)}
+.note.fresh{animation:drop .5s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes drop{from{opacity:0;transform:translateY(-14px) rotate(var(--r,0deg))}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.note.fresh{animation:none}}
+.to{font-size:.85rem;color:#4a5e5a;margin:0 0 8px}.to strong{color:var(--green)}
+.msg{margin:0;white-space:pre-wrap;word-wrap:break-word;font-size:1.02rem}
+.sig{margin-top:14px;font-family:"Caveat","Segoe Print",cursive;font-size:1.45rem;line-height:1.1;color:var(--green)}
+.when{display:block;font-family:"Manrope",sans-serif;font-size:.75rem;color:#6b7c78}
+.empty{border:2px dashed rgba(255,255,255,.28);border-radius:16px;padding:36px 24px;text-align:center;color:var(--soft);max-width:560px;margin:10px auto}
+footer{margin-top:48px;color:var(--soft);font-size:.85rem}
+@media (max-width:760px){header{grid-template-columns:1fr}.count{text-align:left}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1c.8 5.6 5.4 10.2 11 11-5.6.8-10.2 5.4-11 11-.8-5.6-5.4-10.2-11-11 5.6-.8 10.2-5.4 11-11z" fill="#BD5319"/></svg>
+    Green Gate International
+  </div>
+  <header>
+    <div>
+      <h1>Баярлалаа, хүний нөөцийн баг минь</h1>
+      <p class="lede">Хүний нөөцийн ажилтны баярын өдрийг тохиолдуулан хамт олондоо сэтгэлийн үгээ үлдээгээрэй.</p>
+      <a class="cta" href="<?= formUrl ?>" target="_blank" rel="noopener">Талархлаа бичих</a>
+    </div>
+    <div class="count" aria-live="polite"><b id="count">0</b><span>талархал хананд</span></div>
+  </header>
+  <div id="wall" class="wall"></div>
+  <div id="empty" class="empty">Ачаалж байна…</div>
+  <footer>Green Gate International · Чанар, үнэ цэн түгээнэ</footer>
+</div>
+<script>
+(function(){
+  var COLORS={"Ногоон":"n2","Зэс":"n3","Шар":"n4","Цагаан":"n1"};
+  var seen={}, first=true;
+  function hash(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0}return Math.abs(h)}
+  function fmt(ts){if(!ts)return"";var d=new Date(ts);
+    try{return d.toLocaleDateString("mn-MN",{month:"long",day:"numeric"})+", "+d.toLocaleTimeString("mn-MN",{hour:"2-digit",minute:"2-digit"})}catch(e){return d.toLocaleString()}}
+  function render(json){
+    var notes=[];try{notes=JSON.parse(json)||[]}catch(e){}
+    document.getElementById("count").textContent=notes.length;
+    var wall=document.getElementById("wall"), empty=document.getElementById("empty");
+    wall.textContent="";
+    empty.hidden=notes.length>0;
+    if(!notes.length) empty.textContent="Хана одоохондоо хоосон байна. Эхний талархлыг та үлдээгээрэй.";
+    notes.forEach(function(n){
+      var key=n.at+":"+n.text.slice(0,30);
+      var el=document.createElement("article"); el.className="note";
+      el.style.background="var(--"+(COLORS[n.color]||"n2")+")";
+      el.style.setProperty("--r",((hash(key)%7)-3)*0.6+"deg");
+      if(!first&&!seen[key]) el.classList.add("fresh");
+      seen[key]=1;
+      var to=document.createElement("p"); to.className="to"; to.appendChild(document.createTextNode("Хэнд: "));
+      var st=document.createElement("strong"); st.textContent=n.to||"Хүний нөөцийн баг"; to.appendChild(st);
+      var m=document.createElement("p"); m.className="msg"; m.textContent=n.text;
+      var sig=document.createElement("div"); sig.className="sig"; sig.textContent=n.name||"Хамт олноос тань";
+      var w=document.createElement("span"); w.className="when"; w.textContent=fmt(n.at); sig.appendChild(w);
+      el.appendChild(to); el.appendChild(m); el.appendChild(sig); wall.appendChild(el);
+    });
+    first=false;
+  }
+  function load(){
+    google.script.run.withSuccessHandler(render).withFailureHandler(function(){
+      if(first) document.getElementById("empty").textContent="Ачаалж чадсангүй. Хуудсаа дахин ачаална уу.";
+    }).getNotes();
+  }
+  load(); setInterval(load,20000);
+})();
+</script>
+</body>
+</html>
